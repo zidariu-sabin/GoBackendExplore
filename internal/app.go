@@ -1,6 +1,7 @@
 package app
 
 import (
+	"GoBackendExploreMovieTracker/internal/api"
 	"GoBackendExploreMovieTracker/internal/store"
 	"database/sql"
 	"log"
@@ -8,12 +9,13 @@ import (
 )
 
 type Application struct {
-	Logger *log.Logger
-	DB     *sql.DB
+	Logger       *log.Logger
+	DB           *sql.DB
+	MovieHandler *api.MovieHandler
 }
 
 func NewApplication() (*Application, error) {
-	pgDb, err := store.Open()
+	pgDB, err := store.Open()
 
 	if err != nil {
 		panic(err)
@@ -23,9 +25,16 @@ func NewApplication() (*Application, error) {
 	// loggerAdapter := zerologadapter.New(zerolog.New(os.Stdout))
 	// db = sqldblogger.OpenDriver(dsn, db.Driver(), loggerAdapter/*, using_default_options*/)
 
+	//stores
+	movieStore := store.NewPostgresMovieStore(pgDB)
+
+	//handlers
+	movieHandler := api.NewMovieHandler(movieStore, logger)
+
 	app := &Application{
-		Logger: logger,
-		DB:     pgDb,
+		Logger:       logger,
+		DB:           pgDB,
+		MovieHandler: movieHandler,
 	}
 
 	return app, nil

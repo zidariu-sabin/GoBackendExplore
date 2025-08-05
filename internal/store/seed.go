@@ -2,6 +2,7 @@ package store
 
 // A file containing methods for pulling data through the TMDB api and populating a PostgresSQL database
 import (
+	// "GoBackendExploreMovieTracker/internal/store"
 	"GoBackendExploreMovieTracker/internal/utils"
 	"database/sql"
 	"encoding/json"
@@ -37,26 +38,12 @@ type PostgresStore struct {
 	db *sql.DB
 }
 
-func NewPostgresWorkoutStore(db *sql.DB) *PostgresStore {
+func NewPostgresSeedStore(db *sql.DB) *PostgresStore {
 	return &PostgresStore{db: db}
-}
-
-type Genre struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
 }
 
 type BodyGenre struct {
 	Genres []Genre `json:"genres"`
-}
-
-type Movie struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
-	ReleaseDate string `json:"release_date"`
-	Overview    string `json:"overview"`
-	PosterPath  string `json:"poster_path"`
-	GenreIds    []int  `json:"genre_ids"`
 }
 
 type BodyMovie struct {
