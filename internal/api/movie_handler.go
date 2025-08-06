@@ -5,6 +5,7 @@ import (
 	"GoBackendExploreMovieTracker/internal/utils"
 	"GoBackendExploreMovieTracker/internal/utils/errors"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -73,5 +74,61 @@ func (h *MovieHandler) HandleGetMovieById(w http.ResponseWriter, r *http.Request
 	}
 
 	utils.WriteJson(w, http.StatusOK, utils.Envelope{"movie": movie})
+
+}
+
+func (h *MovieHandler) HandleUpdateMovie(w http.ResponseWriter, r *http.Request) {
+	id, err := utils.ReadIDParam(r)
+
+	if err != nil {
+		h.logger.Printf("ERROR: updatingMovie: %v", err)
+		utils.WriteJson(w, http.StatusBadRequest, errors.ERROR_STATUS_BAD_REQUEST)
+		return
+	}
+
+	var movie store.Movie
+	err = json.NewDecoder(r.Body).Decode(&movie)
+
+	fmt.Printf("body: %+v\n", r.Body)
+	fmt.Printf("Decoded movie: %+v\n", movie)
+
+	if err != nil {
+		h.logger.Printf("ERROR: decodingUpdateMovie: %v", err)
+		utils.WriteJson(w, http.StatusBadRequest, errors.ERROR_STATUS_BAD_REQUEST)
+		return
+	}
+
+	movie.ID = int(id)
+
+	err = h.movieStore.UpdateMovie(&movie)
+
+	if err != nil {
+		h.logger.Printf("ERROR: updatingMovie: %v", err)
+		utils.WriteJson(w, http.StatusInternalServerError, errors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
+		return
+	}
+
+	utils.WriteJson(w, http.StatusOK, utils.Envelope{"movie": movie})
+}
+
+func (h *MovieHandler) HandleDeleteMovie(w http.ResponseWriter, r *http.Request) {
+
+	id, err := utils.ReadIDParam(r)
+
+	if err != nil {
+		h.logger.Printf("ERROR: gettingMovieById: %v", err)
+		utils.WriteJson(w, http.StatusBadRequest, errors.ERROR_STATUS_BAD_REQUEST)
+		return
+	}
+
+	err = h.movieStore.DeleteMovie(id)
+
+	if err != nil {
+		h.logger.Printf("ERROR: gettingMovieById: %v", err)
+		utils.WriteJson(w, http.StatusNotFound, errors.ERROR_STATUS_NOT_FOUND)
+		return
+	}
+
+	utils.WriteJson(w, http.StatusOK, utils.Envelope{"message": "movie deleted successfully"})
 
 }

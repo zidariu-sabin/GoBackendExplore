@@ -2,6 +2,8 @@ package store
 
 import (
 	"database/sql"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -11,7 +13,7 @@ type Movie struct {
 	ReleaseDate time.Time `json:"release_date"`
 	Overview    string    `json:"overview"`
 	PosterPath  string    `json:"poster_path"`
-	GenreIds    []int     `json:"genre_ids"`
+	GenreIds    []int64   `json:"genre_ids"`
 }
 
 type PostgresMovieStore struct {
@@ -26,23 +28,21 @@ type MovieStore interface {
 	CreateMovie(*Movie) error
 	GetMovieById(id int64) (*Movie, error)
 	UpdateMovie(*Movie) error
-	DeleteMovieById(id int64) error
+	DeleteMovie(id int64) error
 }
 
 func (pg *PostgresMovieStore) CreateMovie(movie *Movie) error {
 
 	query := `
-	INSERT INTO movies (Title, ReleaseDate, Overview, PosterPath, GenreIds)
+	INSERT INTO movies (id, title, release_date, overview, poster_path, genre_ids)
 	VALUES ($1, $2, $3, $4, $5, $6)
 	RETURNING id
 	`
-
-	err := pg.db.QueryRow(query, movie.Title, movie.ReleaseDate, movie.Overview, movie.PosterPath, movie.GenreIds).Scan(&movie.ID)
+	err := pg.db.QueryRow(query, movie.ID, movie.Title, movie.ReleaseDate, movie.Overview, movie.PosterPath, movie.GenreIds).Scan(&movie.ID)
 
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -54,10 +54,21 @@ func (pg *PostgresMovieStore) GetMovieById(id int64) (*Movie, error) {
 	`
 
 	movie := &Movie{}
-	err := pg.db.QueryRow(query, id).Scan(&movie.ID, &movie.Title, &movie.ReleaseDate, &movie.Overview, &movie.PosterPath, &movie.GenreIds)
+	var genreIds string
+
+	err := pg.db.QueryRow(query, id).Scan(&movie.ID, &movie.Title, &movie.ReleaseDate, &movie.Overview, &movie.PosterPath, &genreIds)
 
 	if err != nil {
 		return nil, err
+	}
+
+	genreIds = strings.Trim(genreIds, "{}")
+	for _, id := range strings.Split(genreIds, ",") {
+		parsedId, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		movie.GenreIds = append(movie.GenreIds, parsedId)
 	}
 
 	return movie, nil
@@ -87,7 +98,7 @@ func (pg *PostgresMovieStore) UpdateMovie(movie *Movie) error {
 	return nil
 }
 
-func (pg *PostgresMovieStore) DeleteMovieById(id int64) error {
+func (pg *PostgresMovieStore) DeleteMovie(id int64) error {
 	query := `
 	DELETE FROM movies
 	WHERE id = $1
