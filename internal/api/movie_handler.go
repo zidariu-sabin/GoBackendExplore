@@ -4,8 +4,8 @@ import (
 	"GoBackendExploreMovieTracker/internal/store"
 	"GoBackendExploreMovieTracker/internal/utils"
 	"GoBackendExploreMovieTracker/internal/utils/errors"
+	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -17,7 +17,7 @@ type MovieRequest struct {
 	ReleaseDate *time.Time `json:"release_date"`
 	Overview    *string    `json:"overview"`
 	PosterPath  *string    `json:"poster_path"`
-	GenreIds    []int      `json:"genre_ids"`
+	GenreIds    []int64    `json:"genre_ids"`
 }
 
 type MovieHandler struct {
@@ -86,11 +86,36 @@ func (h *MovieHandler) HandleUpdateMovie(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var movie store.Movie
-	err = json.NewDecoder(r.Body).Decode(&movie)
+	existingMovie, err := h.movieStore.GetMovieById(id)
 
-	fmt.Printf("body: %+v\n", r.Body)
-	fmt.Printf("Decoded movie: %+v\n", movie)
+	if err != nil {
+		h.logger.Printf("ERROR: updatingMovieGettingById: %v", err)
+		utils.WriteJson(w, http.StatusInternalServerError, errors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
+		return
+	}
+
+	var moviePayload MovieRequest
+	err = json.NewDecoder(r.Body).Decode(&moviePayload)
+
+	if moviePayload.Title != nil {
+		existingMovie.Title = *moviePayload.Title
+	}
+
+	if moviePayload.ReleaseDate != nil {
+		existingMovie.ReleaseDate = *moviePayload.ReleaseDate
+	}
+
+	if moviePayload.Overview != nil {
+		existingMovie.Overview = *moviePayload.Overview
+	}
+
+	if moviePayload.PosterPath != nil {
+		existingMovie.PosterPath = *moviePayload.PosterPath
+	}
+
+	if moviePayload.GenreIds != nil {
+		existingMovie.GenreIds = moviePayload.GenreIds
+	}
 
 	if err != nil {
 		h.logger.Printf("ERROR: decodingUpdateMovie: %v", err)
@@ -98,9 +123,7 @@ func (h *MovieHandler) HandleUpdateMovie(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	movie.ID = int(id)
-
-	err = h.movieStore.UpdateMovie(&movie)
+	err = h.movieStore.UpdateMovie(existingMovie)
 
 	if err != nil {
 		h.logger.Printf("ERROR: updatingMovie: %v", err)
@@ -108,7 +131,7 @@ func (h *MovieHandler) HandleUpdateMovie(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	utils.WriteJson(w, http.StatusOK, utils.Envelope{"movie": movie})
+	utils.WriteJson(w, http.StatusOK, utils.Envelope{"movie": existingMovie})
 }
 
 func (h *MovieHandler) HandleDeleteMovie(w http.ResponseWriter, r *http.Request) {
@@ -124,8 +147,14 @@ func (h *MovieHandler) HandleDeleteMovie(w http.ResponseWriter, r *http.Request)
 	err = h.movieStore.DeleteMovie(id)
 
 	if err != nil {
-		h.logger.Printf("ERROR: gettingMovieById: %v", err)
-		utils.WriteJson(w, http.StatusNotFound, errors.ERROR_STATUS_NOT_FOUND)
+		switch {
+		case err == sql.ErrNoRows:
+			h.logger.Printf("ERROR: gettingMovieById: %v", err)
+			utils.WriteJson(w, http.StatusNotFound, errors.ERROR_STATUS_NOT_FOUND)
+		default:
+			h.logger.Printf("ERROR: gettingMovieById: %v", err)
+			utils.WriteJson(w, http.StatusInternalServerError, errors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
+		}
 		return
 	}
 

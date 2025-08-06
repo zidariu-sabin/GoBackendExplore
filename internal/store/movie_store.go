@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -80,7 +81,7 @@ func (pg *PostgresMovieStore) UpdateMovie(movie *Movie) error {
 	SET title = $1, release_date = $2, overview = $3, poster_path = $4, genre_ids = $5
 	WHERE id = $6
 	`
-
+	fmt.Printf("genreIds decoded: %v\n", movie.GenreIds)
 	result, err := pg.db.Exec(query, movie.Title, movie.ReleaseDate, movie.Overview, movie.PosterPath, movie.GenreIds, movie.ID)
 
 	if err != nil {
