@@ -9,6 +9,10 @@ import (
 func SetupRoutes(app *app.Application) *mux.Router {
 	r := mux.NewRouter()
 
+	r.HandleFunc("/user", app.UserHandler.HandleRegisterUser).Methods("POST")
+	r.HandleFunc("/tokens/authentication", app.Tokenhandler.HandleCreateToken).Methods("POST")
+
+	r.Use(app.Middleware.Authenticate)
 	r.HandleFunc("/movie/{id}", app.MovieHandler.HandleGetMovieById).Methods("GET")
 	r.HandleFunc("/movie", app.MovieHandler.HandleCreateMovie).Methods("POST")
 	r.HandleFunc("/movie/{id}", app.MovieHandler.HandleUpdateMovie).Methods("PUT")
