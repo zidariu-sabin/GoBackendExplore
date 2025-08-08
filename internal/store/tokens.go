@@ -3,6 +3,7 @@ package store
 import (
 	"GoBackendExploreMovieTracker/internal/tokens"
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -17,6 +18,7 @@ func NewPostgrestokenStore(db *sql.DB) *PostgresTokenStore {
 type TokenStore interface {
 	CreateNewToken(userID int64, expiry time.Duration, scope string) (*tokens.Token, error)
 	InsertToken(token *tokens.Token) error
+	DeleteOldTokens() (int64, error)
 }
 
 func (pg *PostgresTokenStore) CreateNewToken(userID int64, ttl time.Duration, scope string) (*tokens.Token, error) {
@@ -39,4 +41,28 @@ func (pg *PostgresTokenStore) InsertToken(token *tokens.Token) error {
 	_, err := pg.db.Exec(query, token.Hash, token.UserID, token.Expiry, token.Scope)
 
 	return err
+}
+
+func (pg *PostgresTokenStore) DeleteOldTokens() (int64, error) {
+	query := `
+	DELETE FROM tokens
+	WHERE expiry > NOW ()
+	RETURNING count
+	`
+
+	result, err := pg.db.Exec(query)
+
+	fmt.Printf("Deleted rows: %v", result)
+
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
 }
