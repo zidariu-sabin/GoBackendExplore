@@ -16,6 +16,7 @@ type Application struct {
 	UserHandler      *api.UserHandler
 	Tokenhandler     *api.TokenHandler
 	WatchlistHandler *api.WatchlistHandler
+	ReviewHandler    *api.ReviewHandler
 	Middleware       *middleware.UserMiddleware
 }
 
@@ -33,14 +34,16 @@ func NewApplication() (*Application, error) {
 	//stores
 	movieStore := store.NewPostgresMovieStore(pgDB)
 	userStore := store.NewPostgresUserStore(pgDB)
-	tokenStore := store.NewPostgrestokenStore(pgDB)
+	tokenStore := store.NewPostgresTokenStore(pgDB)
 	watchlistStore := store.NewPostgresWatchlistStore(pgDB)
+	reviewStore := store.NewPostgresReviewStore(pgDB)
 
 	//handlers
 	movieHandler := api.NewMovieHandler(movieStore, logger)
 	userHandler := api.NewUserHandler(userStore, logger)
 	tokenHandler := api.NewTokenHandler(tokenStore, userStore, logger)
 	watchlistHandler := api.NewWatchlistHandler(watchlistStore, logger)
+	reviewHandler := api.NewReviewHandler(reviewStore, logger)
 
 	//middleware
 	middleware := middleware.NewUserMiddleware(userStore)
@@ -52,6 +55,7 @@ func NewApplication() (*Application, error) {
 		UserHandler:      userHandler,
 		Tokenhandler:     tokenHandler,
 		WatchlistHandler: watchlistHandler,
+		ReviewHandler:    reviewHandler,
 		Middleware:       middleware,
 	}
 

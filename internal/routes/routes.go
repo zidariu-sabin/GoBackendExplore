@@ -17,11 +17,15 @@ func SetupRoutes(app *app.Application) *mux.Router {
 	r.HandleFunc("/movie", app.Middleware.RequireUser(app.MovieHandler.HandleCreateMovie)).Methods("POST")
 	r.HandleFunc("/movie/{id}", app.Middleware.RequireUser(app.MovieHandler.HandleUpdateMovie)).Methods("PUT")
 	r.HandleFunc("/movie/{id}", app.Middleware.RequireUser(app.MovieHandler.HandleDeleteMovie)).Methods("DELETE")
+
 	r.HandleFunc("/watchlist", app.Middleware.RequireUser(app.WatchlistHandler.HandleAddToWatchlist)).Methods("POST")
 	r.HandleFunc("/watchlist", app.Middleware.RequireUser(app.WatchlistHandler.HandleRemoveFromWatchlist)).Methods("DELETE")
 	r.HandleFunc("/watchlist/{id}", app.Middleware.RequireUser(app.WatchlistHandler.HandleGetWatchlist)).Methods("GET")
-	// Define your routes here
-	// Example: router.HandleFunc("/api/movies", movieHandler).Methods("GET")
+
+	r.HandleFunc("/review", app.Middleware.RequireUser(app.ReviewHandler.HandleCreateReview)).Methods("POST")
+	r.HandleFunc("/review/{id}", app.Middleware.RequireUser(app.ReviewHandler.HandleGetReviewById)).Methods("GET")
+	r.HandleFunc("/review/{id}", app.Middleware.RequireUser(app.ReviewHandler.HandleUpdateReview)).Methods("PUT")
+	r.HandleFunc("/review/{id}", app.Middleware.RequireUser(app.ReviewHandler.HandleDeleteReview)).Methods("DELETE")
 
 	return r
 }
