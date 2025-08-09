@@ -10,12 +10,13 @@ import (
 )
 
 type Application struct {
-	Logger       *log.Logger
-	DB           *sql.DB
-	MovieHandler *api.MovieHandler
-	UserHandler  *api.UserHandler
-	Tokenhandler *api.TokenHandler
-	Middleware   *middleware.UserMiddleware
+	Logger           *log.Logger
+	DB               *sql.DB
+	MovieHandler     *api.MovieHandler
+	UserHandler      *api.UserHandler
+	Tokenhandler     *api.TokenHandler
+	WatchlistHandler *api.WatchlistHandler
+	Middleware       *middleware.UserMiddleware
 }
 
 func NewApplication() (*Application, error) {
@@ -33,22 +34,25 @@ func NewApplication() (*Application, error) {
 	movieStore := store.NewPostgresMovieStore(pgDB)
 	userStore := store.NewPostgresUserStore(pgDB)
 	tokenStore := store.NewPostgrestokenStore(pgDB)
+	watchlistStore := store.NewPostgresWatchlistStore(pgDB)
 
 	//handlers
 	movieHandler := api.NewMovieHandler(movieStore, logger)
 	userHandler := api.NewUserHandler(userStore, logger)
 	tokenHandler := api.NewTokenHandler(tokenStore, userStore, logger)
+	watchlistHandler := api.NewWatchlistHandler(watchlistStore, logger)
 
 	//middleware
 	middleware := middleware.NewUserMiddleware(userStore)
 
 	app := &Application{
-		Logger:       logger,
-		DB:           pgDB,
-		MovieHandler: movieHandler,
-		UserHandler:  userHandler,
-		Tokenhandler: tokenHandler,
-		Middleware:   middleware,
+		Logger:           logger,
+		DB:               pgDB,
+		MovieHandler:     movieHandler,
+		UserHandler:      userHandler,
+		Tokenhandler:     tokenHandler,
+		WatchlistHandler: watchlistHandler,
+		Middleware:       middleware,
 	}
 
 	return app, nil

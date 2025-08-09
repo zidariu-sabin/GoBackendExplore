@@ -3,9 +3,10 @@ package api
 import (
 	"GoBackendExploreMovieTracker/internal/store"
 	"GoBackendExploreMovieTracker/internal/utils"
-	"GoBackendExploreMovieTracker/internal/utils/errors"
+	"GoBackendExploreMovieTracker/internal/utils/httpErrors"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -40,7 +41,7 @@ func (h *MovieHandler) HandleCreateMovie(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		h.logger.Printf("ERROR: decodingCreateMovie: %v", err)
-		utils.WriteJson(w, http.StatusBadRequest, errors.ERROR_STATUS_BAD_REQUEST)
+		utils.WriteJson(w, http.StatusBadRequest, httpErrors.ERROR_STATUS_BAD_REQUEST)
 		return
 	}
 
@@ -48,7 +49,7 @@ func (h *MovieHandler) HandleCreateMovie(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		h.logger.Println("ERROR: creatingMovie:", err)
-		utils.WriteJson(w, http.StatusInternalServerError, errors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
+		utils.WriteJson(w, http.StatusInternalServerError, httpErrors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
 		return
 	}
 
@@ -61,16 +62,22 @@ func (h *MovieHandler) HandleGetMovieById(w http.ResponseWriter, r *http.Request
 
 	if err != nil {
 		h.logger.Printf("ERROR: gettingMovieById: %v", err)
-		utils.WriteJson(w, http.StatusBadRequest, errors.ERROR_STATUS_BAD_REQUEST)
+		utils.WriteJson(w, http.StatusBadRequest, httpErrors.ERROR_STATUS_BAD_REQUEST)
 		return
 	}
 
 	movie, err := h.movieStore.GetMovieById(id)
 
 	if err != nil {
-		h.logger.Printf("ERROR: gettingMovieById: %v", err)
-		utils.WriteJson(w, http.StatusNotFound, errors.ERROR_STATUS_NOT_FOUND)
-		return
+		if errors.Is(err, sql.ErrNoRows) {
+			h.logger.Printf("WARN: movie not found by id: %v", err)
+			utils.WriteJson(w, http.StatusNotFound, httpErrors.ERROR_STATUS_NOT_FOUND)
+			return
+		} else {
+			h.logger.Printf("ERROR: gettingMovieById: %v", err)
+			utils.WriteJson(w, http.StatusInternalServerError, httpErrors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
+			return
+		}
 	}
 
 	utils.WriteJson(w, http.StatusOK, utils.Envelope{"movie": movie})
@@ -82,16 +89,18 @@ func (h *MovieHandler) HandleUpdateMovie(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		h.logger.Printf("ERROR: updatingMovie: %v", err)
-		utils.WriteJson(w, http.StatusBadRequest, errors.ERROR_STATUS_BAD_REQUEST)
+		utils.WriteJson(w, http.StatusBadRequest, httpErrors.ERROR_STATUS_BAD_REQUEST)
 		return
 	}
 
 	existingMovie, err := h.movieStore.GetMovieById(id)
 
-	if err != nil {
+	if errors.Is(err, sql.ErrNoRows) {
+		h.logger.Printf("WARN: movie to update not found: %v", err)
+		utils.WriteJson(w, http.StatusNotFound, httpErrors.ERROR_STATUS_NOT_FOUND)
+	} else {
 		h.logger.Printf("ERROR: updatingMovieGettingById: %v", err)
-		utils.WriteJson(w, http.StatusInternalServerError, errors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
-		return
+		utils.WriteJson(w, http.StatusInternalServerError, httpErrors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
 	}
 
 	var moviePayload MovieRequest
@@ -119,7 +128,7 @@ func (h *MovieHandler) HandleUpdateMovie(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		h.logger.Printf("ERROR: decodingUpdateMovie: %v", err)
-		utils.WriteJson(w, http.StatusBadRequest, errors.ERROR_STATUS_BAD_REQUEST)
+		utils.WriteJson(w, http.StatusBadRequest, httpErrors.ERROR_STATUS_BAD_REQUEST)
 		return
 	}
 
@@ -127,7 +136,7 @@ func (h *MovieHandler) HandleUpdateMovie(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		h.logger.Printf("ERROR: updatingMovie: %v", err)
-		utils.WriteJson(w, http.StatusInternalServerError, errors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
+		utils.WriteJson(w, http.StatusInternalServerError, httpErrors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
 		return
 	}
 
@@ -140,7 +149,7 @@ func (h *MovieHandler) HandleDeleteMovie(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		h.logger.Printf("ERROR: gettingMovieById: %v", err)
-		utils.WriteJson(w, http.StatusBadRequest, errors.ERROR_STATUS_BAD_REQUEST)
+		utils.WriteJson(w, http.StatusBadRequest, httpErrors.ERROR_STATUS_BAD_REQUEST)
 		return
 	}
 
@@ -150,10 +159,10 @@ func (h *MovieHandler) HandleDeleteMovie(w http.ResponseWriter, r *http.Request)
 		switch {
 		case err == sql.ErrNoRows:
 			h.logger.Printf("ERROR: gettingMovieById: %v", err)
-			utils.WriteJson(w, http.StatusNotFound, errors.ERROR_STATUS_NOT_FOUND)
+			utils.WriteJson(w, http.StatusNotFound, httpErrors.ERROR_STATUS_NOT_FOUND)
 		default:
 			h.logger.Printf("ERROR: gettingMovieById: %v", err)
-			utils.WriteJson(w, http.StatusInternalServerError, errors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
+			utils.WriteJson(w, http.StatusInternalServerError, httpErrors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
 		}
 		return
 	}

@@ -9,6 +9,7 @@ import (
 
 	"GoBackendExploreMovieTracker/internal/store"
 	"GoBackendExploreMovieTracker/internal/utils"
+	"GoBackendExploreMovieTracker/internal/utils/httpErrors"
 )
 
 // struct used for null field checking in registering
@@ -59,7 +60,7 @@ func (uh *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request
 
 	if err != nil {
 		uh.logger.Printf("ERROR: decodingRegisterRequest: %v", err)
-		utils.WriteJson(w, http.StatusBadRequest, utils.Envelope{"error": "invalid request"})
+		utils.WriteJson(w, http.StatusBadRequest, httpErrors.ERROR_STATUS_BAD_REQUEST)
 		return
 	}
 
@@ -80,7 +81,7 @@ func (uh *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request
 
 	if err != nil {
 		uh.logger.Printf("ERROR: hashingPassword: %v", err)
-		utils.WriteJson(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJson(w, http.StatusInternalServerError, httpErrors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
 		return
 	}
 
@@ -88,7 +89,7 @@ func (uh *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request
 
 	if err != nil {
 		uh.logger.Printf("ERROR: registeringUser: %v", err)
-		utils.WriteJson(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJson(w, http.StatusInternalServerError, httpErrors.ERROR_STATUS_INTERNAL_SERVER_ERROR)
 		return
 	}
 

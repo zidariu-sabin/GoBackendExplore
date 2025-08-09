@@ -1,4 +1,4 @@
-package errors
+package httpErrors
 
 import "GoBackendExploreMovieTracker/internal/utils"
 

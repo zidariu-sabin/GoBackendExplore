@@ -17,7 +17,9 @@ func SetupRoutes(app *app.Application) *mux.Router {
 	r.HandleFunc("/movie", app.Middleware.RequireUser(app.MovieHandler.HandleCreateMovie)).Methods("POST")
 	r.HandleFunc("/movie/{id}", app.Middleware.RequireUser(app.MovieHandler.HandleUpdateMovie)).Methods("PUT")
 	r.HandleFunc("/movie/{id}", app.Middleware.RequireUser(app.MovieHandler.HandleDeleteMovie)).Methods("DELETE")
-
+	r.HandleFunc("/watchlist", app.Middleware.RequireUser(app.WatchlistHandler.HandleAddToWatchlist)).Methods("POST")
+	r.HandleFunc("/watchlist", app.Middleware.RequireUser(app.WatchlistHandler.HandleRemoveFromWatchlist)).Methods("DELETE")
+	r.HandleFunc("/watchlist/{id}", app.Middleware.RequireUser(app.WatchlistHandler.HandleGetWatchlist)).Methods("GET")
 	// Define your routes here
 	// Example: router.HandleFunc("/api/movies", movieHandler).Methods("GET")
 
