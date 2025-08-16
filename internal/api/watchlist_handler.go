@@ -1,6 +1,7 @@
 package api
 
 import (
+	"GoBackendExploreMovieTracker/internal/middleware"
 	"GoBackendExploreMovieTracker/internal/store"
 	"GoBackendExploreMovieTracker/internal/utils"
 	"GoBackendExploreMovieTracker/internal/utils/httpErrors"
@@ -10,7 +11,6 @@ import (
 )
 
 type WatchlistEntryRequest struct {
-	UserID  *int64 `json:"user_id"`
 	MovieId *int64 `json:"movie_id"`
 }
 
@@ -38,8 +38,10 @@ func (h WatchlistHandler) HandleAddToWatchlist(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	user := middleware.GetUser(r)
+
 	watchlistEntry := &store.WatchlistEntry{
-		UserID:  *req.UserID,
+		UserID:  user.ID,
 		MovieID: *req.MovieId,
 	}
 
@@ -66,9 +68,10 @@ func (h WatchlistHandler) HandleRemoveFromWatchlist(w http.ResponseWriter, r *ht
 		utils.WriteJson(w, http.StatusBadRequest, httpErrors.ERROR_STATUS_BAD_REQUEST)
 		return
 	}
+	user := middleware.GetUser(r)
 
 	watchlistEntry := &store.WatchlistEntry{
-		UserID:  *req.UserID,
+		UserID:  user.ID,
 		MovieID: *req.MovieId,
 	}
 

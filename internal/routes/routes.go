@@ -10,7 +10,7 @@ func SetupRoutes(app *app.Application) *mux.Router {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/user", app.UserHandler.HandleRegisterUser).Methods("POST")
-	r.HandleFunc("/tokens/authentication", app.Tokenhandler.HandleCreateToken).Methods("POST")
+	r.HandleFunc("/tokens/authentication", app.TokenHandler.HandleCreateToken).Methods("POST")
 
 	r.Use(app.Middleware.Authenticate)
 	r.HandleFunc("/movie/{id}", app.Middleware.RequireUser(app.MovieHandler.HandleGetMovieById)).Methods("GET")
@@ -27,5 +27,9 @@ func SetupRoutes(app *app.Application) *mux.Router {
 	r.HandleFunc("/review/{id}", app.Middleware.RequireUser(app.ReviewHandler.HandleUpdateReview)).Methods("PUT")
 	r.HandleFunc("/review/{id}", app.Middleware.RequireUser(app.ReviewHandler.HandleDeleteReview)).Methods("DELETE")
 
+	r.HandleFunc("/rating", app.Middleware.RequireUser(app.RatingHandler.HandleCreateRating)).Methods("POST")
+	r.HandleFunc("/rating/movie/{id}", app.Middleware.RequireUser(app.RatingHandler.HandleGetMovieRatingScore)).Methods("GET")
+	r.HandleFunc("/rating", app.Middleware.RequireUser(app.RatingHandler.HandleUpdateRating)).Methods("PUT")
+	r.HandleFunc("/rating", app.Middleware.RequireUser(app.RatingHandler.HandleDeleteRating)).Methods("DELETE")
 	return r
 }
