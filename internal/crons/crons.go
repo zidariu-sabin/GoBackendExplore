@@ -17,14 +17,14 @@ type Cron struct {
 	job      func(store.CronJobStore) error
 }
 
-type CronJobPipeLine struct {
+type CronJobPipeline struct {
 	crons  []Cron
 	store  store.CronJobStore
 	logger *log.Logger
 }
 
-func NewCronJobPipeline(crons []Cron, store store.CronJobStore, logger *log.Logger) *CronJobPipeLine {
-	return &CronJobPipeLine{
+func NewCronJobPipeline(crons []Cron, store store.CronJobStore, logger *log.Logger) *CronJobPipeline {
+	return &CronJobPipeline{
 		crons:  crons,
 		store:  store,
 		logger: logger,
@@ -45,7 +45,7 @@ type CronJobPipelineControl interface {
 	StartCronWorkers()
 }
 
-func (c *CronJobPipeLine) StartCronWorkers() {
+func (c *CronJobPipeline) StartCronWorkers() {
 	for _, cron := range c.crons {
 		go func(cron Cron) {
 			ticker := time.NewTicker(cron.interval)

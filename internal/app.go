@@ -20,7 +20,7 @@ type Application struct {
 	ReviewHandler    *api.ReviewHandler
 	RatingHandler    *api.RatingHandler
 	Middleware       *middleware.UserMiddleware
-	CronJobPipeline  *crons.CronJobPipeLine
+	CronJobPipeline  *crons.CronJobPipeline
 }
 
 func NewApplication() (*Application, error) {
