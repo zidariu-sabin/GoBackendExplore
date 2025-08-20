@@ -34,6 +34,8 @@ func main() {
 
 	app.Logger.Printf("App is successfully running on port %d \n", port)
 
+	go app.CronJobPipeline.StartCronWorkers()
+
 	err = server.ListenAndServe()
 
 	if err != nil {

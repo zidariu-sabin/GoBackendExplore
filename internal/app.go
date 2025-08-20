@@ -2,6 +2,7 @@ package app
 
 import (
 	"GoBackendExploreMovieTracker/internal/api"
+	"GoBackendExploreMovieTracker/internal/crons"
 	"GoBackendExploreMovieTracker/internal/middleware"
 	"GoBackendExploreMovieTracker/internal/store"
 	"database/sql"
@@ -19,6 +20,7 @@ type Application struct {
 	ReviewHandler    *api.ReviewHandler
 	RatingHandler    *api.RatingHandler
 	Middleware       *middleware.UserMiddleware
+	CronJobPipeline  *crons.CronJobPipeLine
 }
 
 func NewApplication() (*Application, error) {
@@ -51,6 +53,10 @@ func NewApplication() (*Application, error) {
 	//middleware
 	middleware := middleware.NewUserMiddleware(userStore)
 
+	//cron jobs
+	cronJobStore := store.NewPostgresCronJobStore(pgDB)
+	cronJobPipeline := crons.NewCronJobPipeline(crons.RunningCrons, cronJobStore, logger)
+
 	app := &Application{
 		Logger:           logger,
 		DB:               pgDB,
@@ -61,6 +67,7 @@ func NewApplication() (*Application, error) {
 		ReviewHandler:    reviewHandler,
 		RatingHandler:    ratingHandler,
 		Middleware:       middleware,
+		CronJobPipeline:  cronJobPipeline,
 	}
 
 	return app, nil
