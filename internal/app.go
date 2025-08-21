@@ -5,6 +5,7 @@ import (
 	"GoBackendExploreMovieTracker/internal/crons"
 	"GoBackendExploreMovieTracker/internal/middleware"
 	"GoBackendExploreMovieTracker/internal/store"
+	"GoBackendExploreMovieTracker/migrations"
 	"database/sql"
 	"log"
 	"os"
@@ -26,6 +27,11 @@ type Application struct {
 func NewApplication() (*Application, error) {
 	pgDB, err := store.Open()
 
+	if err != nil {
+		return nil, err
+	}
+
+	err = store.MigrateFs(pgDB, migrations.FS, ".")
 	if err != nil {
 		panic(err)
 	}
